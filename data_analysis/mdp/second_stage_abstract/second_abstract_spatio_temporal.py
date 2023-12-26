@@ -350,7 +350,7 @@ if __name__ == '__main__':
     # visualize_mdp(graph)
     states = get_mdp_states(graph)
     print(states)
-    kmeans_instance = SpatioTemporalKMeans(config=eval_config, datas=states, graph=attr_dic, k=3)
+    kmeans_instance = SpatioTemporalKMeans(config=eval_config, datas=states, graph=attr_dic, cr=0.25, cd=0.25, cp=0.25, cs=0.25, k=3)
     #   进行聚类
     kmeans_instance.process()
 
