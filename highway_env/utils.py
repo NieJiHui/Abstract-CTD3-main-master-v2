@@ -79,7 +79,7 @@ def point_in_rotated_rectangle(point: np.ndarray, center: np.ndarray, length: fl
     c, s = np.cos(angle), np.sin(angle)
     r = np.array([[c, -s], [s, c]])
     ru = r.dot(point - center)
-    return point_in_rectangle(ru, (-length/2, -width/2), (length/2, width/2))
+    return point_in_rectangle(ru, (-length / 2, -width / 2), (length / 2, width / 2))
 
 
 def point_in_ellipse(point: Vector, center: Vector, angle: float, length: float, width: float) -> bool:
@@ -124,8 +124,8 @@ def rect_corners(center: np.ndarray, length: float, width: float, angle: float,
     :return: a list of positions
     """
     center = np.array(center)
-    half_l = np.array([length/2, 0])
-    half_w = np.array([0, width/2])
+    half_l = np.array([length / 2, 0])
+    half_w = np.array([0, width / 2])
     corners = [- half_l - half_w,
                - half_l + half_w,
                + half_l + half_w,
@@ -233,11 +233,11 @@ def confidence_ellipsoid(data: Dict[str, np.ndarray], lambda_: float = 1e-5, del
     """
     phi = np.array(data["features"])
     y = np.array(data["outputs"])
-    g_n_lambda = 1/sigma * np.transpose(phi) @ phi + lambda_ * np.identity(phi.shape[-1])
+    g_n_lambda = 1 / sigma * np.transpose(phi) @ phi + lambda_ * np.identity(phi.shape[-1])
     theta_n_lambda = np.linalg.inv(g_n_lambda) @ np.transpose(phi) @ y / sigma
     d = theta_n_lambda.shape[0]
-    beta_n = np.sqrt(2*np.log(np.sqrt(np.linalg.det(g_n_lambda) / lambda_ ** d) / delta)) + \
-        np.sqrt(lambda_*d) * param_bound
+    beta_n = np.sqrt(2 * np.log(np.sqrt(np.linalg.det(g_n_lambda) / lambda_ ** d) / delta)) + \
+             np.sqrt(lambda_ * d) * param_bound
     return theta_n_lambda, g_n_lambda, beta_n
 
 
@@ -351,7 +351,7 @@ def distance_to_rect(line: Tuple[np.ndarray, np.ndarray], rect: List[np.ndarray]
     a, b, c, d = rect
     u = b - a
     v = d - a
-    u, v = u/np.linalg.norm(u), v/np.linalg.norm(v)
+    u, v = u / np.linalg.norm(u), v / np.linalg.norm(v)
     rqu = (q - r) @ u
     rqv = (q - r) @ v
     interval_1 = [(a - r) @ u / rqu, (b - r) @ u / rqu]

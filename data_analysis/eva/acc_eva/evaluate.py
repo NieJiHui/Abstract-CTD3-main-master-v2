@@ -50,6 +50,7 @@ def parse_args():
 
     parser.add_argument("--env_config", type=str, help="path of highway env",
                         default="conf/env/highway_acc_continuous_acceleration.yaml")
+
     parser.add_argument("--gpu", type=str, help="[0,1,2,3 | -1] the id of gpu to train/test, -1 means using cpu",
                         default="-1")
 
@@ -70,18 +71,6 @@ def compute_mae(y_true, y_predict, config):
         else:
             print("ERROR: check the value of parameter mode")
             exit(0)
-    # elif config.algo:
-    #     if config.mode == 'gap':
-    #         mdl = joblib.load(save_mdl_path + 'trad_kmeans_gap.pkl')
-    #     elif config.mode == 'canopy':
-    #         mdl = joblib.load(save_mdl_path + 'trad_kmeans_canopy.pkl')
-    #     elif config.mode == 'elbow':
-    #         mdl = joblib.load(save_mdl_path + 'trad_kmeans_elbow.pkl')
-    #     elif config.mode == 'silhouette':
-    #         mdl = joblib.load(save_mdl_path + 'trad_kmeans_silhouette.pkl')
-    #     else:
-    #         print("ERROR: check the value of parameter mode")
-    #         exit(0)
 
     mae = 0
 
@@ -92,7 +81,7 @@ def compute_mae(y_true, y_predict, config):
 
 
 def plt_canopy(states, graph, config):
-    path = os.path.join("./../../", config.eval_config)
+    path = os.path.join("../../../", config.eval_config)
     eval_config = utils.load_yml(path)
 
     #   先canopy算法粗聚类
@@ -140,7 +129,7 @@ def plt_canopy(states, graph, config):
 
 
 def plt_elbow(states, graph, config):
-    path = os.path.join("./../../", config.eval_config)
+    path = os.path.join("../../../", config.eval_config)
     eval_config = utils.load_yml(path)
 
     min_clusters = 2
@@ -226,7 +215,7 @@ def plt_elbow(states, graph, config):
 
 
 def plt_Silhouette(states, graph, config):
-    path = os.path.join("./../../", config.eval_config)
+    path = os.path.join("../../../", config.eval_config)
     eval_config = utils.load_yml(path)
 
     min_clusters = 2
@@ -297,7 +286,7 @@ def plt_Silhouette(states, graph, config):
 
 
 def plt_gap(states, graph, config):
-    path = os.path.join("./../../", config.eval_config)
+    path = os.path.join("../../../", config.eval_config)
     eval_config = utils.load_yml(path)
 
     min_clusters = 2
@@ -367,20 +356,20 @@ if __name__ == '__main__':
 
     config = parse_args()
 
-    log_file_train = '../../my_log_ACC.log'
+    log_file_train = '../../../my_log_ACC.log'
     csv_file_train = './td3_risk_acc_logs.csv'
     csv_file_phase = './result.csv'
     # csv_file_phase = './first_phase_result.csv'
 
     #   训练好的模型里面的
-    log_file_val = '../../trained_acc_data.log'
+    log_file_val = '../../../trained_acc_data.log'
     csv_file_val = './td3_risk_acc_val_logs.csv'
 
     utils_data.log2csv(log_file_train, csv_file_train)
 
     # 如果重新训练了数据，就要把这些raw data经过第一阶段处理
     if config.train_again:
-        path = os.path.join("./../../", config.eval_config)
+        path = os.path.join("../../../", config.eval_config)
         eval_config = utils.load_yml(path)
 
 
@@ -401,7 +390,7 @@ if __name__ == '__main__':
         prcss.write_csv(csv_file_phase)
 
     #   构建MDP模型
-    graph = generate_graph_from_csv(csv_file_phase)
+    graph = get_mdp_map(csv_file_phase)
 
     #   生成聚类用数据
     train_data = []
