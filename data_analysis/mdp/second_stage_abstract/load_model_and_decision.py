@@ -35,6 +35,7 @@ if __name__ == '__main__':
     print("预测的簇标签：", label)
     centroid = revised_centers[label[0]]
     print("预测的中心点：", centroid)
+    # 使用模型进行动作的选择
     chosen_action = get_action(centroid, Spatio_temporal_attr_dic)
     print("Chosen Action:", chosen_action)
 
