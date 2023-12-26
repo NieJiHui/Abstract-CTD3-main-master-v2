@@ -194,7 +194,7 @@ class FirstAbstract:
 
                     csv_writer.writerow(abstract_row)
 
-    def del_duplicate_row_and_cal_pro(self, input_file, output_file, output_file_raw_data):
+    def del_duplicate_row_and_cal_pro(self, input_file, output_file, output_file_raw_data, output_file_center_data):
         """
             从MDP文件中删除重复的行，并计算概率。
 
@@ -221,8 +221,6 @@ class FirstAbstract:
                     duplicate_indices[key] = [index]
 
                 data_input.append(row)
-
-        row_len = len(data_input)
 
         # 删除相同的行，并插入新数据，计算概率
         for indices in duplicate_indices.values():
@@ -254,6 +252,7 @@ class FirstAbstract:
                                       ast.literal_eval(data_input[indices[index]]['NextStateIdMod'])]
                     cost_mod = [float(element) for element in ast.literal_eval(data_input[indices[index]]['CostIdMod'])]
 
+                    # 原始数据
                     state = get_raw_data_by_id(state_id, state_mod, self.state_gra, self.state_low_bound)
                     act = get_raw_data_by_id(act_id, act_mod, self.act_gra, self.act_low_bound)
                     reward = get_raw_data_by_id(reward_id, reward_mod, self.rwd_gra, self.rwd_low_bound)
@@ -368,6 +367,10 @@ class FirstAbstract:
         # 将id恢复为原始数据
         fieldnames = ['State', 'Act', 'Reward', 'NextState', 'Done', 'Cost', 'Weight', 'Probability']
 
+        # 将id修改为中心数据
+        fieldnames_center = ['State_Center', 'Act_Center', 'Reward_Center', 'NextState_Center', 'Done', 'Cost_Center',
+                      'Weight', 'Probability']
+
         with open(output_file_raw_data, 'w', newline='') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
@@ -390,7 +393,8 @@ class FirstAbstract:
                 state_val = get_raw_data_by_id(state_id, state_id_mod, self.state_gra, self.state_low_bound)
                 act_val = get_raw_data_by_id(act_id, act_id_mod, self.act_gra, self.act_low_bound)
                 reward_val = get_raw_data_by_id(reward_id, reward_id_mod, self.rwd_gra, self.rwd_low_bound)
-                next_state_val = get_raw_data_by_id(next_state_id, next_state_id_mod, self.state_gra, self.state_low_bound)
+                next_state_val = get_raw_data_by_id(next_state_id, next_state_id_mod, self.state_gra,
+                                                    self.state_low_bound)
                 done_val = bool(done[0])
                 cost_val = get_raw_data_by_id(cost_id, cost_id_mod, self.cost_gra, self.cost_low_bound)
 
@@ -402,6 +406,45 @@ class FirstAbstract:
                     'NextState': next_state_val,
                     'Done': done_val,
                     'Cost': cost_val,
+                    'Weight': weight,
+                    'Probability': probability
+                })
+
+        with open(output_file_center_data, 'w', newline='') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames_center)
+            writer.writeheader()
+
+            for row in data_to_save:
+                state_id = ast.literal_eval(row['StateID'])
+                act_id = ast.literal_eval(row['ActID'])
+                reward_id = ast.literal_eval(row['RewardID'])
+                next_state_id = ast.literal_eval(row['NextStateID'])
+                done = ast.literal_eval(row['Done'])
+                cost_id = ast.literal_eval(row['CostID'])
+                state_id_mod = ast.literal_eval(row['StateIdMod'])
+                act_id_mod = ast.literal_eval(row['ActIdMod'])
+                reward_id_mod = ast.literal_eval(row['RewardIdMod'])
+                next_state_id_mod = ast.literal_eval(row['NextStateIdMod'])
+                cost_id_mod = ast.literal_eval(row['CostIdMod'])
+                weight = row['Weight']
+                probability = row['Probability']
+
+                state_center = get_center_data_by_id(state_id, state_id_mod, self.state_gra, self.state_low_bound)
+                act_center = get_center_data_by_id(act_id, act_id_mod, self.act_gra, self.act_low_bound)
+                reward_center = get_center_data_by_id(reward_id, reward_id_mod, self.rwd_gra, self.rwd_low_bound)
+                next_state_center = get_center_data_by_id(next_state_id, next_state_id_mod, self.state_gra,
+                                                          self.state_low_bound)
+                done_center = bool(done[0])
+                cost_center = get_center_data_by_id(cost_id, cost_id_mod, self.cost_gra, self.cost_low_bound)
+
+                # 将数据写入CSV文件
+                writer.writerow({
+                    'State_Center': state_center,
+                    'Act_Center': act_center,
+                    'Reward_Center': reward_center,
+                    'NextState_Center': next_state_center,
+                    'Done': done_center,
+                    'Cost_Center': cost_center,
                     'Weight': weight,
                     'Probability': probability
                 })
@@ -420,4 +463,4 @@ if __name__ == '__main__':
         "/Users/akihi/Downloads/coding?/Abstract-CTD3-main-master/data_analysis/acc_td3/dataset/td3_risk_acc_logs.csv",
         "first_abstract_data_with_duplicate_row.csv")
     data.del_duplicate_row_and_cal_pro("first_abstract_data_with_duplicate_row.csv", "first_abstract_pro.csv",
-                                       "first_abstract_pro_raw_data.csv")
+                                       "first_abstract_pro_raw_data.csv", "first_abstract_pro_center_data.csv")
