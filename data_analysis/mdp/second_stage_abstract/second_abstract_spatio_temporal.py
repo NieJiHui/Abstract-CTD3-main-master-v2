@@ -19,7 +19,7 @@ from scipy.spatial.distance import jensenshannon
 import networkx as nx
 import matplotlib.pyplot as plt
 import sys
-import findOptimalK as fOK
+import data_analysis.mdp.second_stage_abstract.findOptimalK as fOK
 import utils
 from data_analysis.mdp.MDP import Node, Edge, Attr
 
@@ -80,12 +80,15 @@ def get_mdp_map(input_file):
                     next_state = Node(next_state_center)
                     mdp_dic[next_state_key] = next_state.to_dict()
                 current_state.add_edge(next_state, act_center, reward_center, done, cost_center, weight, probability)
+                mdp_dic[current_state_key] = current_state.to_dict()
             else:
                 current_state = Node(state_center)
                 if next_state_key in mdp_dic:
                     next_state = Node.from_dict(mdp_dic[next_state_key])
                 else:
                     next_state = Node(next_state_center)
+                # if current_state == next_state:
+                #     print(True)
                 current_state.add_edge(next_state, act_center, reward_center, done, cost_center, weight, probability)
                 mdp_dic[current_state_key] = current_state.to_dict()
                 if next_state_key not in mdp_dic:
@@ -124,7 +127,7 @@ def visualize_mdp(mdp_dic):
 
 def get_mdp_states(mdp_dic, decimal_places=4):
     states = list(mdp_dic.keys())
-    datas = [list(t) for t in states]
+    datas = [ast.literal_eval(item) for item in states]
     return np.array(datas)
 
 

@@ -1,20 +1,20 @@
-acc = []
-reward = []
-cost = []
-acc_reward_cost = [(-0.08, -0.07), (1.17, 1.18), (0.0, 0.01), (-0.21, -0.2), (1.16, 1.17), (0.0, 0.01)]
-num = 2
+import numpy as np
+import matplotlib.pyplot as plt
 
-# 按周期将数据添加到列表中
-cycle = len(acc_reward_cost) / num
-print(cycle)
-for index, data in enumerate(acc_reward_cost):
-    if index % cycle == 0:
-        acc.append(data)
-    if index % cycle == 1:
-        reward.append(data)
-    if index % cycle == 2:
-        cost.append(data)
+# 生成一维数组
+x = np.linspace(0, 1, 5)
+y = np.linspace(0, 2, 3)
 
-print(acc)
-print(reward)
-print(cost)
+# 使用 np.meshgrid 创建二维网格
+X, Y = np.meshgrid(x, y)
+
+# 打印结果
+print("X:")
+print(X)
+print("Y:")
+print(Y)
+
+# 绘制网格
+plt.scatter(X, Y, marker='o')
+plt.show()
+

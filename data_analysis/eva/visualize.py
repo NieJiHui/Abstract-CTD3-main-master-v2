@@ -4,15 +4,11 @@ import numpy as np
 from data_analysis.mdp.second_stage_abstract.second_abstract_spatio_temporal import SpatioTemporalKMeans
 import utils
 
+
 #   这一种有网格，但是刻度很密
-def plt_grid_font1(eval_path, mdl_path):
-
-    eval_path = "./../../../conf/eval/highway_acc_eval.yaml"
+def plt_grid_font1(eval_path, mdl_path, save_path=None):
     eval_config = utils.load_yml(eval_path)
-
-    mdl_path = "./../../mdp/second_stage_abstract/kmeans_model/acc_td3_risk/Spatio_temporal_Kmeans.pkl"
     mdl = joblib.load(mdl_path)
-
     #   eval信息
     dim = eval_config["dim"]["state_dim"]
     gran = eval_config["granularity"]["state_gran"]
@@ -25,10 +21,11 @@ def plt_grid_font1(eval_path, mdl_path):
     #   画格子用的数组，因为pcolormesh应该输入的是网格中心点
     x_grid = np.linspace(lowerbound_ls[0] + (gran[0]/2), upperbound_ls[0] - (gran[0]/2), num[0])
     y_grid = np.linspace(lowerbound_ls[1] + (gran[1]/2), upperbound_ls[1] - (gran[1]/2), num[1])
-
+    # 输出数组长度
+    print("Length of x_grid:", len(x_grid))
+    print("Length of y_grid:", len(y_grid))
     #   创建一个网格
     X, Y = np.meshgrid(x_grid, y_grid)
-    # print(X)
 
     #   生成状态用的数组
     x = np.linspace(lowerbound_ls[0], upperbound_ls[0], num[0]+1)
@@ -36,12 +33,15 @@ def plt_grid_font1(eval_path, mdl_path):
 
     # 记录每个网格预测的标签 涂色用
     Z = np.zeros_like(X)
+    print("Size of X:", X.shape)
+    print("Size of Y:", Y.shape)
+    print("Size of Z:", Z.shape)
 
     #   生成所有状态 并预测
     for i in range(num[0]):
         for j in range(num[1]):
             state = [x_grid[i], y_grid[j]]
-            Z[i][j] = mdl.predict([state])[0]
+            Z[j][i] = mdl.predict([state])[0]
 
     # 创建一个图形
     fig, ax = plt.subplots(figsize=(8, 8))
@@ -55,17 +55,15 @@ def plt_grid_font1(eval_path, mdl_path):
     c = ax.pcolormesh(X, Y, Z, cmap='viridis')
     plt.grid(True, linestyle='-', linewidth=0.5, color='black')
 
-    plt.savefig("./font1.png")
-    plt.show()
+    if save_path:
+        plt.savefig(save_path)
+    else:
+        plt.show()
 
 
 #   这种用到系数一些的刻度，但是没有网格
 def plt_grid_font2(eval_path, mdl_path):
-
-    eval_path = "./../../../conf/eval/highway_acc_eval.yaml"
     eval_config = utils.load_yml(eval_path)
-
-    mdl_path = "./../../mdp/second_stage_abstract/kmeans_model/acc_td3_risk/Spatio_temporal_Kmeans.pkl"
     mdl = joblib.load(mdl_path)
 
     #   eval信息
@@ -116,11 +114,7 @@ def plt_grid_font2(eval_path, mdl_path):
 
 #   这种想要在有网格的同时还能保证刻度系数，但是有点线不显示，未知原因
 def plt_grid_experiment(eval_path, mdl_path):
-
-    eval_path = "./../../../conf/eval/highway_acc_eval.yaml"
     eval_config = utils.load_yml(eval_path)
-
-    mdl_path = "./../../mdp/second_stage_abstract/kmeans_model/acc_td3_risk/Spatio_temporal_Kmeans.pkl"
     mdl = joblib.load(mdl_path)
 
     #   eval信息
@@ -176,8 +170,10 @@ def plt_grid_experiment(eval_path, mdl_path):
     plt.show()
 
 if __name__ == '__main__':
+    eval_path = "../../conf/eval/highway_acc_eval.yaml"
+    mdl_path = "../../data_analysis/mdp/second_stage_abstract/kmeans_model/acc_td3_risk/Spatio_temporal_Kmeans.pkl"
+    plt_grid_font1(eval_path, mdl_path, "abstract_rendering/acc_td3_gra_0.01.png")
 
-    plt_grid_font1('a', 'a')
     """
     参数1是一阶段参数eval_config路径
     参数2是载入的pkl模型的路径

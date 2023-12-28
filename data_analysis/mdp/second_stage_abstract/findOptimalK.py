@@ -25,8 +25,7 @@ def find_optimal_k_elbow(data, min_clusters=2, max_clusters=10, save_path=None):
     optimal_k = int(input("Enter the optimal number of clusters (based on the elbow graph): "))
     return optimal_k
 
-
-def find_optimal_k_silhouette(data, min_clusters=2, max_clusters=10):
+def find_optimal_k_silhouette(data, min_clusters=2, max_clusters=10, save_path=None):
     silhouette_scores = []
     for i in range(min_clusters, max_clusters + 1):
         kmeans = KMeans(n_clusters=i, random_state=42)
@@ -39,20 +38,23 @@ def find_optimal_k_silhouette(data, min_clusters=2, max_clusters=10):
     plt.title('Silhouette Score Method for Optimal k')
     plt.xlabel('Number of clusters')
     plt.ylabel('Silhouette Score')
-    plt.show()
+    if save_path:
+        plt.savefig(save_path)
+    else:
+        plt.show()
 
     optimal_k = int(input("Enter the optimal number of clusters (based on silhouette score): "))
     return optimal_k
 
 
-def calculate_gap_statistic(data, k):
+def calculate_gap_statistic(data, min_clusters, k):
     reference_datasets = []
     for _ in range(10):  # 生成10个随机数据集作为参考
         random_data = np.random.rand(*data.shape)
         reference_datasets.append(random_data)
 
     gap_values = []
-    for i in range(1, k + 1):
+    for i in range(min_clusters, k + 1):
         kmeans = KMeans(n_clusters=i)
         kmeans.fit(data)
         log_inertia = np.log(kmeans.inertia_)
@@ -69,14 +71,17 @@ def calculate_gap_statistic(data, k):
     return gap_values
 
 
-def find_optimal_k_gap(data, min_clusters=2, max_clusters=10):
-    gap_values = calculate_gap_statistic(data, max_clusters)
+def find_optimal_k_gap(data, min_clusters=2, max_clusters=10, save_path=None):
+    gap_values = calculate_gap_statistic(data, min_clusters, max_clusters)
 
     plt.plot(range(min_clusters, max_clusters + 1), gap_values, marker='o')
     plt.title('Gap Statistic Method for Optimal k')
     plt.xlabel('Number of clusters')
     plt.ylabel('Gap Value')
-    plt.show()
+    if save_path:
+        plt.savefig(save_path)
+    else:
+        plt.show()
 
     optimal_k = int(input("Enter the optimal number of clusters (based on gap statistic): "))
     return optimal_k

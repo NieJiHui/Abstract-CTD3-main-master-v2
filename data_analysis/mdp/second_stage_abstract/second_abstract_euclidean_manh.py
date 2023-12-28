@@ -106,7 +106,7 @@ def perform_kmeans(data, optimal_k):
 
 if __name__ == '__main__':
     # Load the dataset: Raw data文件
-    file_path = '/Users/akihi/Downloads/coding?/Abstract-CTD3-main-master/data_analysis/mdp/first_stage_abstract/acc_datasets/first_abstract_pro_raw_data.csv'
+    file_path = '/Users/akihi/Downloads/coding?/Abstract-CTD3-main-master/data_analysis/mdp/first_stage_abstract/acc_datasets/first_abstract_pro_raw_data_test.csv'
     data = pd.read_csv(file_path)
 
     # Convert string representations of lists into actual lists
@@ -131,12 +131,12 @@ if __name__ == '__main__':
     # print(cluster_centers)
     #
     # # Save the KMeans model
-    model_save_path = 'kmeans_model/acc_td3_risk/Euclidean_kmeans_model.pkl'
-    mdp_dic = get_second_stage_mdp(data, kmeans_model, 'datasets/acc_td3/euclidean_mdp.csv')
-    graph, attr_dic = get_mdp_map('datasets/acc_td3/euclidean_mdp.csv')
+    model_save_path = 'kmeans_model/acc_td3_risk/Euclidean_kmeans_model_test.pkl'
+    mdp_dic = get_second_stage_mdp(data, kmeans_model, 'datasets/acc_td3/euclidean_mdp_test.csv')
+    graph, attr_dic = get_mdp_map('datasets/acc_td3/euclidean_mdp_test.csv')
     graph_str_keys = {str(key): value for key, value in graph.items()}
     # 将字典保存到文件
-    with open('kmeans_model/acc_td3_risk/euclidean_graph.json', 'w') as file:
+    with open('kmeans_model/acc_td3_risk/euclidean_graph_test.json', 'w') as file:
         json.dump(graph_str_keys, file, indent=2)
 
     # # 保存字典到文件
@@ -145,9 +145,10 @@ if __name__ == '__main__':
 
     attr_dic_str_keys = {str(key): value for key, value in attr_dic.items()}
     # 将字典保存到文件
-    with open('kmeans_model/acc_td3_risk/euclidean_attr_dic.json', 'w') as file:
-        json.dump(attr_dic_str_keys, file, indent = 2)
-    # joblib.dump(kmeans_model, model_save_path)
+    with open('kmeans_model/acc_td3_risk/euclidean_attr_dic_test.json', 'w') as file:
+        json.dump(attr_dic_str_keys, file, indent=2)
+
+    joblib.dump(kmeans_model, model_save_path)
     # print(f"KMeans model saved at: {model_save_path}")
 
     # loaded_kmeans_model = joblib.load(model_save_path)

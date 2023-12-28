@@ -460,9 +460,9 @@ if __name__ == '__main__':
                          [0.01, 0.01], [0.01], [0.01], [100],
                          [-0.9, -0.39], [1.45, 0.52], [-1.1], [1.1], [0.1], [1.96], [0], [100])
     data.interval_mdp(
-        "/Users/akihi/Downloads/coding?/Abstract-CTD3-main-master/data_analysis/acc_td3/dataset/td3_risk_acc_logs.csv",
-        "acc_datasets/first_abstract_data_with_duplicate_row.csv")
-    data.del_duplicate_row_and_cal_pro("acc_datasets/first_abstract_data_with_duplicate_row.csv", "acc_datasets"
-                                                                                                  "/first_abstract_pro.csv",
-                                       "acc_datasets/first_abstract_pro_raw_data.csv", "acc_datasets"
-                                                                                       "/first_abstract_pro_center_data.csv")
+        "/Users/akihi/Downloads/coding?/Abstract-CTD3-main-master/data_analysis/acc_td3/dataset/td3_risk_acc_logs_test.csv",
+        "acc_datasets/first_abstract_data_with_duplicate_row_test.csv")
+    data.del_duplicate_row_and_cal_pro("acc_datasets/first_abstract_data_with_duplicate_row_test.csv", "acc_datasets"
+                                                                                                  "/first_abstract_pro_test.csv",
+                                       "acc_datasets/first_abstract_pro_raw_data_test.csv", "acc_datasets"
+                                                                                       "/first_abstract_pro_center_data_test.csv")

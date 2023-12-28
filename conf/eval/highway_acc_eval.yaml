@@ -5,17 +5,17 @@ dim:
   reward_dim: 1
   cost_dim: 1
 granularity:
-  state_gran: [0.04, 0.04]
+  state_gran: [0.01, 0.01]
   action_gran: [0.01]
   reward_gran: [0.01]
-  cost_gran: [0.01]
+  cost_gran: [100]
 upperbound:
-  state_upperbound: [1, 1]
-  action_upperbound: [1]
-  reward_upperbound: [2]
+  state_upperbound: [1.45, 0.52]
+  action_upperbound: [1.1]
+  reward_upperbound: [1.96]
   cost_upperbound: [100]
 lowerbound:
-  state_lowerbound: [-1, -1]
-  action_lowerbound: [-1]
-  reward_lowerbound: [0]
+  state_lowerbound: [-0.9, -0.39]
+  action_lowerbound: [-1.1]
+  reward_lowerbound: [0.1]
   cost_lowerbound: [0]
