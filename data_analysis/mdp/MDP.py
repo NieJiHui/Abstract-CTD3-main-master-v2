@@ -2,8 +2,6 @@ class Node:
     def __init__(self, state):
         self.state = state
         self.edges = set()
-        # for column in columns:
-        #     self.state.append(column)
 
     def add_edge(self, next_node, action, reward, done, cost, weight, prob):
         self.edges.add(Edge(next_node, action, reward, done, cost, weight, prob))
@@ -15,6 +13,18 @@ class Node:
 
     def __hash__(self):
         return hash(id(self.state))
+
+    def to_dict(self):
+        return {
+            'state': self.state,
+            'edges': [edge.to_dict() for edge in self.edges]
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        node = cls(data['state'])
+        node.edges = {Edge.from_dict(edge_data) for edge_data in data.get('edges', [])}
+        return node
 
 
 class Edge:
@@ -43,6 +53,29 @@ class Edge:
             self.prob
         ))
 
+    def to_dict(self):
+        return {
+            'next_node': self.next_node.to_dict(),
+            'action': self.action,
+            'reward': self.reward,
+            'done': self.done,
+            'cost': self.cost,
+            'weight': self.weight,
+            'prob': self.prob
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls(
+            next_node=Node.from_dict(data['next_node']),
+            action=data['action'],
+            reward=data['reward'],
+            done=data['done'],
+            cost=data['cost'],
+            weight=data['weight'],
+            prob=data['prob']
+        )
+
 
 class Attr:
     def __init__(self, state):
@@ -54,7 +87,6 @@ class Attr:
         self.done = []
         self.weights = []
         self.next_states = []
-        # TODO config内的action的action_up_bound,action_low_bound
         self.max_action = -100
         self.min_action = 100
         for edge in state.edges:
@@ -68,3 +100,31 @@ class Attr:
             # TODO 最大最小需要根据动作维度确定，这里先用一维
             self.min_action = min(self.min_action, edge.action[0])
             self.max_action = max(self.max_action, edge.action[0])
+
+    def to_dict(self):
+        return {
+            'state': self.state.to_dict(),
+            'probs': self.probs,
+            'actions': self.actions,
+            'rewards': self.rewards,
+            'costs': self.costs,
+            'done': self.done,
+            'weights': self.weights,
+            'next_states': [state.to_dict() for state in self.next_states],
+            'max_action': self.max_action,
+            'min_action': self.min_action
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        attr = cls(data['state'])
+        attr.probs = data['probs']
+        attr.actions = data['actions']
+        attr.rewards = data['rewards']
+        attr.costs = data['costs']
+        attr.done = data['done']
+        attr.weights = data['weights']
+        attr.next_states = [Node.from_dict(state_data) for state_data in data['next_states']]
+        attr.max_action = data['max_action']
+        attr.min_action = data['min_action']
+        return attr

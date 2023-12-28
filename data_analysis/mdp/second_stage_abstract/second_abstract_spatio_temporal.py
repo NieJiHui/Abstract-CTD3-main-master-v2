@@ -73,27 +73,27 @@ def get_mdp_map(input_file):
             next_state_key = tuple(next_state_center)
 
             if current_state_key in mdp_dic:
-                current_state = mdp_dic[current_state_key]
+                current_state = Node.from_dict(mdp_dic[current_state_key])
                 if next_state_key in mdp_dic:
-                    next_state = mdp_dic[next_state_key]
+                    next_state = Node.from_dict(mdp_dic[next_state_key])
                 else:
                     next_state = Node(next_state_center)
-                    mdp_dic[next_state_key] = next_state
+                    mdp_dic[next_state_key] = next_state.to_dict()
                 current_state.add_edge(next_state, act_center, reward_center, done, cost_center, weight, probability)
             else:
                 current_state = Node(state_center)
                 if next_state_key in mdp_dic:
-                    next_state = mdp_dic[next_state_key]
+                    next_state = Node.from_dict(mdp_dic[next_state_key])
                 else:
                     next_state = Node(next_state_center)
                 current_state.add_edge(next_state, act_center, reward_center, done, cost_center, weight, probability)
-                mdp_dic[current_state_key] = current_state
+                mdp_dic[current_state_key] = current_state.to_dict()
                 if next_state_key not in mdp_dic:
-                    mdp_dic[next_state_key] = next_state
+                    mdp_dic[next_state_key] = next_state.to_dict()
 
     attr_dic = {}
     for state_key, state in mdp_dic.items():
-        attr_dic[state_key] = Attr(state)
+        attr_dic[state_key] = Attr(Node.from_dict(state)).to_dict()
 
     return mdp_dic, attr_dic
 
@@ -338,7 +338,7 @@ if __name__ == '__main__':
 
     #   获得图和状态
     graph, attr_dic = get_mdp_map("/Users/akihi/Downloads/coding?/Abstract-CTD3-main-master/data_analysis/mdp"
-                                  "/first_stage_abstract/first_abstract_pro_center_data.csv")
+                                  "/first_stage_abstract/acc_datasets/first_abstract_pro_center_data.csv")
     # 保存字典到文件
     with open('kmeans_model/acc_td3_risk/Spatio_temporal_graph.pkl', 'wb') as file:
         pickle.dump(graph, file)

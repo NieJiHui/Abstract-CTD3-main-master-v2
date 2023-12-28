@@ -1,4 +1,5 @@
 import csv
+import json
 import pickle
 
 import pandas as pd
@@ -105,7 +106,7 @@ def perform_kmeans(data, optimal_k):
 
 if __name__ == '__main__':
     # Load the dataset: Raw data文件
-    file_path = '/Users/akihi/Downloads/coding?/Abstract-CTD3-main-master/data_analysis/mdp/first_stage_abstract/first_abstract_pro_raw_data.csv'
+    file_path = '/Users/akihi/Downloads/coding?/Abstract-CTD3-main-master/data_analysis/mdp/first_stage_abstract/acc_datasets/first_abstract_pro_raw_data.csv'
     data = pd.read_csv(file_path)
 
     # Convert string representations of lists into actual lists
@@ -119,10 +120,10 @@ if __name__ == '__main__':
     combined_states = [list(x) for x in set(tuple(x) for x in combined_states)]
 
     # Find optimal k using elbow method
-    optimal_k = fOK.find_optimal_k_elbow(combined_states)
+    # optimal_k = fOK.find_optimal_k_elbow(combined_states, min_clusters=2, max_clusters=10)
 
     # Perform KMeans clustering with the optimal number of clusters
-    kmeans_model = perform_kmeans(combined_states, optimal_k)
+    kmeans_model = perform_kmeans(combined_states, 3)
     #
     # # Display the cluster centers
     # cluster_centers = kmeans_model.cluster_centers_
@@ -133,13 +134,19 @@ if __name__ == '__main__':
     model_save_path = 'kmeans_model/acc_td3_risk/Euclidean_kmeans_model.pkl'
     mdp_dic = get_second_stage_mdp(data, kmeans_model, 'datasets/acc_td3/euclidean_mdp.csv')
     graph, attr_dic = get_mdp_map('datasets/acc_td3/euclidean_mdp.csv')
-    # 保存字典到文件
-    with open('kmeans_model/acc_td3_risk/euclidean_graph.pkl', 'wb') as file:
-        pickle.dump(graph, file)
+    graph_str_keys = {str(key): value for key, value in graph.items()}
+    # 将字典保存到文件
+    with open('kmeans_model/acc_td3_risk/euclidean_graph.json', 'w') as file:
+        json.dump(graph_str_keys, file, indent=2)
 
-    # 保存字典到文件
-    with open('kmeans_model/acc_td3_risk/euclidean_attr_dic.pkl', 'wb') as file:
-        pickle.dump(attr_dic, file)
+    # # 保存字典到文件
+    # with open('kmeans_model/acc_td3_risk/euclidean_attr_dic.pkl', 'wb') as file:
+    #     pickle.dump(attr_dic, file)
+
+    attr_dic_str_keys = {str(key): value for key, value in attr_dic.items()}
+    # 将字典保存到文件
+    with open('kmeans_model/acc_td3_risk/euclidean_attr_dic.json', 'w') as file:
+        json.dump(attr_dic_str_keys, file, indent = 2)
     # joblib.dump(kmeans_model, model_save_path)
     # print(f"KMeans model saved at: {model_save_path}")
 
