@@ -1,4 +1,5 @@
 import copy
+import json
 import math
 import csv
 import ast
@@ -7,6 +8,7 @@ import os
 import joblib
 import numpy as np
 import pickle
+from joblib import Parallel, delayed
 
 from pyclustering.cluster.center_initializer import kmeans_plusplus_initializer
 from pyclustering.cluster.kmeans import kmeans, kmeans_visualizer
@@ -55,6 +57,7 @@ def graph2arr(graph):
     ret = np.array(lists)
     return ret
 
+
 def get_mdp_map(input_file):
     mdp_dic = {}
     with open(input_file, 'r') as csvfile:
@@ -101,33 +104,52 @@ def get_mdp_map(input_file):
     return mdp_dic, attr_dic
 
 
-def visualize_mdp(mdp_dic):
+def visualize_mdp(mdp_dic, save_path=None):
     G = nx.DiGraph()
 
-    for state_key, state_node in mdp_dic.items():
-        G.add_node(state_key)
+    for state_key, state_data in mdp_dic.items():
+        state_node = Node.from_dict(state_data)
+        G.add_node(str(state_key))
 
         for edge in state_node.edges:
             next_state_key = tuple(edge.next_node.state)
-            G.add_node(next_state_key)
-            G.add_edge(state_key, next_state_key, action=edge.action, reward=edge.reward,
+            G.add_node(str(next_state_key))
+            G.add_edge(str(state_key), str(next_state_key), action=edge.action, reward=edge.reward,
                        done=edge.done, cost=edge.cost, weight=edge.weight, prob=edge.prob)
 
-    pos = nx.spring_layout(G)  # You can choose a different layout if needed
+    pos = nx.spring_layout(G, seed=42)  # You can choose a different layout if needed
     nx.draw(G, pos, with_labels=True, font_weight='bold', node_size=700, node_color='skyblue', font_color='black',
-            font_size=8, edge_color='gray', width=1, alpha=0.7, arrowsize=10)
+            font_size=1, edge_color='gray', width=1, alpha=0.7, arrowsize=10)
 
     edge_labels = {(state,
-                    next_state): f"{edge['action']}, R={edge['reward']}, Done={edge['done']}, Cost={edge['cost']}, Weight={edge['weight']}, Prob={edge['prob']}"
+                    next_state): f"{edge['action']}, R={edge['reward']}, Done={edge['done']}, Cost={edge['cost']}, Weight={edge['weight']}, Prob={edge['prob']:.2f}"
                    for state, next_state, edge in G.edges(data=True)}
     nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_color='red', font_size=1)
 
-    plt.show()
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    else:
+        plt.show()
+
+
+def convert_to_list(input_data):
+    result = []
+    for item in input_data:
+        if isinstance(item, str):
+            # 如果元素是字符串形式的元组，使用 ast.literal_eval 解析
+            item = ast.literal_eval(item)
+        if isinstance(item, tuple):
+            # 如果元素是元组，直接转换为列表
+            result.append(list(item))
+        else:
+            raise ValueError("Invalid element format in the input list")
+    return result
 
 
 def get_mdp_states(mdp_dic, decimal_places=4):
     states = list(mdp_dic.keys())
-    datas = [ast.literal_eval(item) for item in states]
+    datas = convert_to_list(states)
+    # datas = [list(ast.literal_eval(item)) for item in states]
     return np.array(datas)
 
 
@@ -218,24 +240,24 @@ class SpatioTemporalKMeans(kmeans):
     def get_reward_distance(self, attr_x, attr_y):
         sum_x = 0
         sum_y = 0
-        for i in range(len(attr_x.rewards)):
-            sum_x += attr_x.probs[i] * attr_x.rewards[i][0]
+        for i in range(len(attr_x['rewards'])):
+            sum_x += attr_x['probs'][i] * attr_x['rewards'][i][0]
 
-        for i in range(len(attr_y.rewards)):
-            sum_y += attr_y.probs[i] * attr_y.rewards[i][0]
+        for i in range(len(attr_y['rewards'])):
+            sum_y += attr_y['probs'][i] * attr_y['rewards'][i][0]
 
-        return abs(sum_x-sum_y)
+        return abs(sum_x - sum_y)
 
     def get_action_distance(self, attr_x, attr_y):
         sum_x = 0
         sum_y = 0
-        for i in range(len(attr_x.actions)):
-            for j in range(len(attr_x.actions[i])):
-                sum_x += attr_x.probs[i] * attr_x.actions[i][j]
+        for i in range(len(attr_x['actions'])):
+            for j in range(len(attr_x['actions'][i])):
+                sum_x += attr_x['probs'][i] * attr_x['actions'][i][j]
 
-        for i in range(len(attr_y.actions)):
-            for j in range(len(attr_y.actions[i])):
-                sum_y += attr_y.probs[i] * attr_y.actions[i][j]
+        for i in range(len(attr_y['actions'])):
+            for j in range(len(attr_y['actions'][i])):
+                sum_y += attr_y['probs'][i] * attr_y['actions'][i][j]
 
         return abs(sum_x - sum_y)
 
@@ -244,21 +266,21 @@ class SpatioTemporalKMeans(kmeans):
         # 判断两个状态是否相同
         x = self.match_node(data1)
         y = self.match_node(data2)
-        if x.state == y.state:
+        if x['state'] == y['state']:
             return 0
 
         # 状态本身之间的距离
-        state_distance = np.linalg.norm(np.array(x.state.state) - np.array(y.state.state))
+        state_distance = np.linalg.norm(np.array(x['state']['state']) - np.array(y['state']['state']))
 
         #   如果有一个是终止节点
-        if not x.next_states or not y.next_states:
+        if not x['next_states'] or not y['next_states']:
             return self.cs * state_distance
 
         #   动作区间交集奖励的最大差异
         max_reward_difference = self.get_reward_distance(x, y)  # 动作区间交集
 
         #   后继状态分布的差异
-        distribution_difference = self.compute_distribution_difference(x.probs, y.probs)
+        distribution_difference = self.compute_distribution_difference(x['probs'], y['probs'])
 
         #   动作的最大差异
         max_action_difference = self.get_action_distance(x, y)
@@ -272,66 +294,59 @@ class SpatioTemporalKMeans(kmeans):
         """
         centroids = []
         for item in center:
-            # rounded_item = []
-            # for i in range(self.state_dim):
-            #     rounded_item.append(round(item[i], self.precs[i]))
-                # rounded_item.append(round(item[2 * i + 1], self.precs[i]))
             node = self.match_node(item)
-            # cluster = [ele for inner_tuple in node.state for ele in inner_tuple]
-            centroids.append(node.state.state)
+            centroids.append(node['state']['state'])
         return centroids
 
-    #   计算簇间距离，用自定义距离函数
     def compute_inertia(self, datas):
         """
-        datas: 原始数据 2darray 和init的输入一样
+        datas: 原始数据 2D 数组，与 'initialize' 输入相同。
         """
-        # 获取中心点
         inertia = 0
         centroids = self.get_centers()
         centroids = np.array(self.revised_centers(centroids))
-
-        # 获取标签
         clusters = self.get_clusters()
-        labels = [0 for _ in range(datas.shape[0])]
-        for k, item in enumerate(clusters):
-            for it in item:
-                labels[it] = k
 
-        for k, item in enumerate(labels):
-            inertia += self.distance(datas[k], centroids[item])
+        # 矢量化计算距离
+        distances = np.linalg.norm(datas[:, np.newaxis, :] - centroids[clusters], axis=2)
+
+        # 使用矢量化操作计算惯性
+        for k, item in enumerate(clusters):
+            inertia += np.sum(distances[k, item])
 
         return inertia
 
-    #   在聚类之后使用，返回稠密的距离矩阵，最后没用上
-    def tranform(self, datas):
+    def pairwise_distance(self, datas):
         """
-        data 输入数据 2darray
-        ret 距离矩阵 2darray (n_sample, n_center) 表示每个输入数据到中心点距离
+        datas: 输入数据 2D 数组。
+        ret: 具有对称性质的距离矩阵，2D 数组 (n_sample, n_sample)。
+        """
+        # 矢量化计算距离
+        distances = np.linalg.norm(datas[:, np.newaxis, :] - datas, axis=2)
+
+        # 返回对称距离矩阵
+        return distances
+
+    # 可以使用矢量化操作优化其他方法
+
+    def transform(self, datas):
+        """
+        datas: 输入数据 2D 数组。
+        ret: 距离矩阵 2D 数组 (n_sample, n_center)，表示每个输入数据到中心点的距离。
         """
         centroids = self.get_centers()
         centroids = np.array(self.revised_centers(centroids))
 
-        distances = np.zeros((datas.shape[0], centroids.shape[0]))
-        for i in range(centroids.shape[0]):
-            distances[:, i] = np.array([self.distance(item, centroids[i]) for item in datas])
+        # 矢量化计算距离
+        distances = np.linalg.norm(datas[:, np.newaxis, :] - centroids, axis=2)
+
         return distances
 
-    # 用自定义距离公式计算输入各个点的距离
-    def pairwise_distance(self, datas):
-        """
-        data 输入数据 2darray
-        ret 距离矩阵 有对称性质 2darray (n_sample, n_sample) 每个输入数据到其它输入数据距离
-        计算Silhouette时需要
-        """
-        n = datas.shape[0]
-        ret = np.zeros(shape=(n, n))
-        for i in range(n):
-            for j in range(i, n):
-                dis = self.distance(datas[i], datas[j])
-                ret[i][j] = dis
-                ret[j][i] = dis
-        return ret
+
+# 并行计算 pairwise_distance 方法
+def parallel_pairwise_distance(args):
+    i, datas, obj = args
+    return obj.pairwise_distance(datas[i:i + 1, :])
 
 
 if __name__ == '__main__':
@@ -341,21 +356,23 @@ if __name__ == '__main__':
 
     #   获得图和状态
     graph, attr_dic = get_mdp_map("/Users/akihi/Downloads/coding?/Abstract-CTD3-main-master/data_analysis/mdp"
-                                  "/first_stage_abstract/acc_datasets/first_abstract_pro_center_data.csv")
-    # 保存字典到文件
-    with open('kmeans_model/acc_td3_risk/Spatio_temporal_graph.pkl', 'wb') as file:
-        pickle.dump(graph, file)
+                                  "/first_stage_abstract/acc_datasets/first_abstract_pro_center_data_test.csv")
+    graph_str_keys = {str(key): value for key, value in graph.items()}
+    # 将字典保存到文件
+    with open('kmeans_model/acc_td3_risk/spatio_temporal_graph_test.json', 'w') as file:
+        json.dump(graph_str_keys, file, indent=2)
 
-    # 保存字典到文件
-    with open('kmeans_model/acc_td3_risk/Spatio_temporal_attr_dic.pkl', 'wb') as file:
-        pickle.dump(attr_dic, file)
+    attr_dic_str_keys = {str(key): value for key, value in attr_dic.items()}
+    # 将字典保存到文件
+    with open('kmeans_model/acc_td3_risk/spatio_temporal_attr_dic_test.json', 'w') as file:
+        json.dump(attr_dic_str_keys, file, indent=2)
 
-    # visualize_mdp(graph)
+    visualize_mdp(graph, 'mdp_pic/acc_td3/spartio_3_Node.png')
     states = get_mdp_states(graph)
-    print(states)
-    kmeans_instance = SpatioTemporalKMeans(config=eval_config, datas=states, graph=attr_dic, cr=0.25, cd=0.25, cp=0.25, cs=0.25, k=3)
+    kmeans_instance = SpatioTemporalKMeans(config=eval_config, datas=states, graph=attr_dic, cr=0.25, cd=0.25, cp=0.25,
+                                           cs=0.25, k=3)
     #   进行聚类
     kmeans_instance.process()
 
     #   模型保存
-    joblib.dump(kmeans_instance, 'kmeans_model/acc_td3_risk/Spatio_temporal_Kmeans.pkl')
+    joblib.dump(kmeans_instance, 'kmeans_model/acc_td3_risk/spatio_temporal_Kmeans_test.pkl')
